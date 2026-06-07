@@ -7,40 +7,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-/**
- * Gestor de persistencia (RF2).
- *
- * Responsabilidades:
- *  1. Guardar una partida en curso en un archivo de texto legible.
- *  2. Cargar una partida guardada y reconstruir el MotorJuego.
- *  3. Registrar el resultado de cada duelo en resultados.txt.
- *  4. Leer estadísticas históricas desde resultados.txt.
- *
- * Formato del archivo de partida (.ygo):
- *  Cada sección comienza con un encabezado entre corchetes, p.ej. [TURNO].
- *  Dentro de cada sección, los campos son  CLAVE=VALOR  , uno por línea.
- *  Las listas se representan como NOMBRE_LISTA=item1,item2,item3
- *  Los monstruos del campo incluyen sus stats:
- *      CAMPO_J1=NombreMonstruo:atk:def:nivel:posicion:puedeAtacar
- *  Las cartas de mano y mazo solo guardan el nombre (se reconstruyen de la fábrica).
- *
- * Formato resultados.txt (una línea por duelo):
- *  FECHA|DUELISTA1|DUELISTA2|GANADOR|TURNOS|LP_J1_FINAL|LP_J2_FINAL
- */
-/**
- * RF3 – Patrón Singleton: GestorPersistencia.
- *
- * Solo una instancia gestiona la escritura/lectura de archivos para evitar
- * condiciones de carrera y acceso concurrente inconsistente.
- * Mantiene los métodos static para compatibilidad con el código RF2;
- * se accede a la instancia única vía getInstance().
- */
+
 public class GestorPersistencia {
 
-    // ── Singleton: instancia única ───────────────────────────────────────────
+    
     private static volatile GestorPersistencia instancia;
 
-    private GestorPersistencia() {}   // constructor privado
+    private GestorPersistencia() {} 
 
     public static GestorPersistencia getInstance() {
         if (instancia == null) {
@@ -50,22 +23,12 @@ public class GestorPersistencia {
         }
         return instancia;
     }
-    // ─────────────────────────────────────────────────────────────────────────
-
+    
     private static final String CARPETA_PARTIDAS  = "partidas";
     private static final String ARCHIVO_RESULTADOS = "resultados.txt";
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    // =========================================================================
-    // GUARDAR PARTIDA
-    // =========================================================================
-
-    /**
-     * Guarda el estado completo del motor en  partidas/<nombreArchivo>.ygo
-     * @param motor  estado actual del juego
-     * @param nombreArchivo  nombre base del archivo (sin extensión)
-     * @throws IOException  si hay error de escritura
-     */
+    
     public static void guardarPartida(MotorJuego motor, String nombreArchivo) throws IOException {
         File carpeta = new File(CARPETA_PARTIDAS);
         if (!carpeta.exists()) carpeta.mkdirs();
@@ -73,7 +36,7 @@ public class GestorPersistencia {
         File archivo = new File(carpeta, nombreArchivo + ".ygo");
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(archivo)))) {
 
-            // ---- SECCIÓN TURNO ----
+            
             pw.println("[TURNO]");
             pw.println("numero=" + motor.getNumeroTurno());
             pw.println("activo=" + motor.getActivo().getNombre());
@@ -82,11 +45,11 @@ public class GestorPersistencia {
             pw.println("yaAtaco=" + motor.yaAtaco());
             pw.println();
 
-            // ---- SECCIÓN JUGADOR 1 ----
+            
             escribirJugador(pw, motor.getJugador1(), "J1");
             pw.println();
 
-            // ---- SECCIÓN JUGADOR 2 ----
+            
             escribirJugador(pw, motor.getJugador2(), "J2");
         }
     }
@@ -96,24 +59,24 @@ public class GestorPersistencia {
         pw.println("nombre=" + j.getNombre());
         pw.println("lp=" + j.getLp());
 
-        // Mazo (Stack - de tope a fondo)
+        
         pw.print("mazo=");
         Stack<Carta> mazo = j.getMazo();
-        // Copiamos la pila sin modificarla
+        
         List<String> mazoNombres = new ArrayList<>();
-        // Stack -> iterar de tope a fondo usando su iterador (LIFO)
+        
         Deque<String> temp = new ArrayDeque<>();
-        for (Carta c : mazo) temp.push(c.getNombre());     // invertir
+        for (Carta c : mazo) temp.push(c.getNombre());     
         for (String n : temp) mazoNombres.add(n);
         pw.println(String.join(",", mazoNombres));
 
-        // Mano (LinkedList)
+        
         pw.print("mano=");
         List<String> manoNombres = new ArrayList<>();
         for (Carta c : j.getMano()) manoNombres.add(c.getNombre());
         pw.println(String.join(",", manoNombres));
 
-        // Campo con stats completos (nombre:atk:def:nivel:posicion:puedeAtacar)
+        
         pw.print("campo=");
         List<String> campoStr = new ArrayList<>();
         for (Monstruo m : j.getCampo()) {
@@ -122,7 +85,7 @@ public class GestorPersistencia {
         }
         pw.println(String.join("|", campoStr));
 
-        // Trampas
+        
         pw.print("trampas=");
         List<String> trampaNames = new ArrayList<>();
         for (Trampa t : j.getTrampas()) trampaNames.add(t.getNombre());
@@ -172,6 +135,15 @@ public class GestorPersistencia {
         int    lp     = Integer.parseInt(sec.getOrDefault("lp", "8000"));
 
         Jugador j = new Jugador(nombre);
+        
+        if (lp < 8000) j.recibirDanio(8000 - lp);
+        else if (lp > 8000) j.recuperarLp(lp - 8000);
+
+        
+        String mazoStr = sec.getOrDefault("mazo", "");
+        if (!mazoStr.isBlank()) {
+            String[] mazoNombres = mazoStr.split(",");
+            
         // Ajustamos LP directamente (no hay setter, usamos recibirDanio desde 8000)
         if (lp < 8000) j.recibirDanio(8000 - lp);
         else if (lp > 8000) j.recuperarLp(lp - 8000);
@@ -187,6 +159,7 @@ public class GestorPersistencia {
             }
         }
 
+        
         // Mano (LinkedList)
         String manoStr = sec.getOrDefault("mano", "");
         if (!manoStr.isBlank()) {
@@ -196,6 +169,7 @@ public class GestorPersistencia {
             }
         }
 
+        
         // Campo (nombre:atk:def:nivel:posicion:puedeAtacar)
         String campoStr = sec.getOrDefault("campo", "");
         if (!campoStr.isBlank()) {
@@ -216,6 +190,7 @@ public class GestorPersistencia {
             }
         }
 
+    
         // Trampas
         String trampaStr = sec.getOrDefault("trampas", "");
         if (!trampaStr.isBlank()) {
@@ -225,6 +200,7 @@ public class GestorPersistencia {
             }
         }
 
+        
         // Monstruos invocados (Set)
         String invocadosStr = sec.getOrDefault("invocados", "");
         if (!invocadosStr.isBlank()) {
@@ -236,6 +212,13 @@ public class GestorPersistencia {
         return j;
     }
 
+    
+    private static Carta buscarCarta(String nombre) {
+
+        return FabricaCartas.porNombre(nombre);
+    }
+
+  
     /** Busca en la FabricaCartas por nombre. Devuelve copia nueva (no cached). */
     private static Carta buscarCarta(String nombre) {
         // FabricaCartas.crearMazoCompleto() construye instancias nuevas cada vez
@@ -266,6 +249,7 @@ public class GestorPersistencia {
         return resultado;
     }
 
+ 
     // =========================================================================
     // LISTADO DE PARTIDAS GUARDADAS
     // =========================================================================
@@ -281,6 +265,8 @@ public class GestorPersistencia {
         }
         return nombres;
     }
+
+   
 
     // =========================================================================
     // HISTORIAL DE RESULTADOS
@@ -304,6 +290,7 @@ public class GestorPersistencia {
             System.err.println("[Persistencia] No se pudo escribir el resultado: " + e.getMessage());
         }
     }
+
 
     // =========================================================================
     // ESTADÍSTICAS

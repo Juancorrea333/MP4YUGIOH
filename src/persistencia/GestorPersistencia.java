@@ -291,3 +291,22 @@ public class GestorPersistencia {
         } catch (IOException e) {
             return "Error al leer estadísticas: " + e.getMessage();
         }
+
+        if (totalPartidas == 0) return "No hay resultados registrados aún.";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("═══════════════════════════════════════\n");
+        sb.append("        ESTADÍSTICAS HISTÓRICAS        \n");
+        sb.append("═══════════════════════════════════════\n");
+        sb.append("Total de partidas: ").append(totalPartidas).append("\n\n");
+        sb.append("Victorias por duelista:\n");
+        victorias.forEach((nombre, wins) ->
+            sb.append("  ").append(nombre).append(": ").append(wins).append(" victoria(s)\n")
+        );
+        sb.append("\nPartida más larga:  ").append(partidaMasLarga).append("\n");
+        if (minTurnos != Integer.MAX_VALUE)
+        sb.append("Partida más corta:  ").append(partidaMasCorta).append("\n");
+        sb.append("═══════════════════════════════════════\n");
+        return sb.toString();
+    }
+}

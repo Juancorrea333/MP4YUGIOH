@@ -91,13 +91,19 @@ public class GestorPersistencia {
         for (Trampa t : j.getTrampas()) trampaNames.add(t.getNombre());
         pw.println(String.join(",", trampaNames));
 
-        
+        // Monstruos invocados (Set)
         pw.print("invocados=");
         pw.println(String.join(",", j.getMonstruosInvocados()));
     }
 
-    
-    
+    // =========================================================================
+    // CARGAR PARTIDA
+    // =========================================================================
+
+    /**
+     * Carga una partida desde  partidas/<nombreArchivo>.ygo
+     * @throws IOException  si el archivo no existe o su formato es inválido
+     */
     public static MotorJuego cargarPartida(String nombreArchivo) throws IOException {
         File archivo = new File(CARPETA_PARTIDAS, nombreArchivo + ".ygo");
         if (!archivo.exists()) throw new FileNotFoundException("No se encontró la partida: " + archivo.getPath());
@@ -138,6 +144,15 @@ public class GestorPersistencia {
         if (!mazoStr.isBlank()) {
             String[] mazoNombres = mazoStr.split(",");
             
+        // Ajustamos LP directamente (no hay setter, usamos recibirDanio desde 8000)
+        if (lp < 8000) j.recibirDanio(8000 - lp);
+        else if (lp > 8000) j.recuperarLp(lp - 8000);
+
+        // Mazo (reconstructed as Stack – push in reverse so tope queda correcto)
+        String mazoStr = sec.getOrDefault("mazo", "");
+        if (!mazoStr.isBlank()) {
+            String[] mazoNombres = mazoStr.split(",");
+            // El archivo guarda de tope a fondo; empujamos de fondo a tope
             for (int i = mazoNombres.length - 1; i >= 0; i--) {
                 Carta c = buscarCarta(mazoNombres[i].trim());
                 if (c != null) j.agregarAlMazo(c);
@@ -145,6 +160,7 @@ public class GestorPersistencia {
         }
 
         
+        // Mano (LinkedList)
         String manoStr = sec.getOrDefault("mano", "");
         if (!manoStr.isBlank()) {
             for (String nombre2 : manoStr.split(",")) {
@@ -154,6 +170,7 @@ public class GestorPersistencia {
         }
 
         
+        // Campo (nombre:atk:def:nivel:posicion:puedeAtacar)
         String campoStr = sec.getOrDefault("campo", "");
         if (!campoStr.isBlank()) {
             for (String entry : campoStr.split("\\|")) {
@@ -174,6 +191,7 @@ public class GestorPersistencia {
         }
 
     
+        // Trampas
         String trampaStr = sec.getOrDefault("trampas", "");
         if (!trampaStr.isBlank()) {
             for (String tn : trampaStr.split(",")) {
@@ -183,6 +201,7 @@ public class GestorPersistencia {
         }
 
         
+        // Monstruos invocados (Set)
         String invocadosStr = sec.getOrDefault("invocados", "");
         if (!invocadosStr.isBlank()) {
             for (String inv : invocadosStr.split(",")) {
@@ -200,6 +219,14 @@ public class GestorPersistencia {
     }
 
   
+    /** Busca en la FabricaCartas por nombre. Devuelve copia nueva (no cached). */
+    private static Carta buscarCarta(String nombre) {
+        // FabricaCartas.crearMazoCompleto() construye instancias nuevas cada vez
+        // Buscamos en el catálogo estático por nombre
+        return FabricaCartas.porNombre(nombre);
+    }
+
+    // Parser de secciones [TAG] -> {clave -> valor}
     private static Map<String, Map<String, String>> parsearArchivo(File archivo) throws IOException {
         Map<String, Map<String, String>> resultado = new LinkedHashMap<>();
         String seccionActual = null;
@@ -223,6 +250,9 @@ public class GestorPersistencia {
     }
 
  
+    // =========================================================================
+    // LISTADO DE PARTIDAS GUARDADAS
+    // =========================================================================
 
     public static List<String> listarPartidas() {
         File carpeta = new File(CARPETA_PARTIDAS);
@@ -238,6 +268,14 @@ public class GestorPersistencia {
 
    
 
+    // =========================================================================
+    // HISTORIAL DE RESULTADOS
+    // =========================================================================
+
+    /**
+     * Escribe una línea al final de resultados.txt con los datos del duelo.
+     * Formato: FECHA|J1|J2|GANADOR|TURNOS|LP_J1|LP_J2
+     */
     public static void registrarResultado(MotorJuego motor) {
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(ARCHIVO_RESULTADOS, true)))) {
             String fecha    = LocalDateTime.now().format(FMT);
@@ -254,6 +292,17 @@ public class GestorPersistencia {
     }
 
 
+    // =========================================================================
+    // ESTADÍSTICAS
+    // =========================================================================
+
+    /**
+     * Lee resultados.txt y devuelve un String formateado con estadísticas:
+     *  - Total de partidas
+     *  - Victorias por jugador
+     *  - Partida más larga (más turnos)
+     *  - Partida más corta
+     */
     public static String leerEstadisticas() {
         File f = new File(ARCHIVO_RESULTADOS);
         if (!f.exists()) return "No hay resultados registrados aún.";

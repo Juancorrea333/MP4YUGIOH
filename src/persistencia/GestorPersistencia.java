@@ -172,3 +172,122 @@ public class GestorPersistencia {
                 j.invocarMonstruo(m);
             }
         }
+
+    
+        String trampaStr = sec.getOrDefault("trampas", "");
+        if (!trampaStr.isBlank()) {
+            for (String tn : trampaStr.split(",")) {
+                Carta c = buscarCarta(tn.trim());
+                if (c instanceof Trampa) j.colocarTrampa((Trampa) c);
+            }
+        }
+
+        
+        String invocadosStr = sec.getOrDefault("invocados", "");
+        if (!invocadosStr.isBlank()) {
+            for (String inv : invocadosStr.split(",")) {
+                if (!inv.isBlank()) j.getMonstruosInvocados().add(inv.trim());
+            }
+        }
+
+        return j;
+    }
+
+    
+    private static Carta buscarCarta(String nombre) {
+
+        return FabricaCartas.porNombre(nombre);
+    }
+
+  
+    private static Map<String, Map<String, String>> parsearArchivo(File archivo) throws IOException {
+        Map<String, Map<String, String>> resultado = new LinkedHashMap<>();
+        String seccionActual = null;
+        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                linea = linea.strip();
+                if (linea.isEmpty() || linea.startsWith("#")) continue;
+                if (linea.startsWith("[") && linea.endsWith("]")) {
+                    seccionActual = linea;
+                    resultado.putIfAbsent(seccionActual, new LinkedHashMap<>());
+                } else if (seccionActual != null && linea.contains("=")) {
+                    int eq = linea.indexOf('=');
+                    String clave = linea.substring(0, eq).strip();
+                    String valor = linea.substring(eq + 1).strip();
+                    resultado.get(seccionActual).put(clave, valor);
+                }
+            }
+        }
+        return resultado;
+    }
+
+ 
+
+    public static List<String> listarPartidas() {
+        File carpeta = new File(CARPETA_PARTIDAS);
+        List<String> nombres = new ArrayList<>();
+        if (!carpeta.exists()) return nombres;
+        for (File f : Objects.requireNonNull(carpeta.listFiles())) {
+            if (f.getName().endsWith(".ygo")) {
+                nombres.add(f.getName().replace(".ygo", ""));
+            }
+        }
+        return nombres;
+    }
+
+   
+
+    public static void registrarResultado(MotorJuego motor) {
+        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(ARCHIVO_RESULTADOS, true)))) {
+            String fecha    = LocalDateTime.now().format(FMT);
+            String j1       = motor.getJugador1().getNombre();
+            String j2       = motor.getJugador2().getNombre();
+            String ganador  = motor.getGanador() != null ? motor.getGanador().getNombre() : "EMPATE";
+            int    turnos   = motor.getNumeroTurno();
+            int    lpJ1     = motor.getJugador1().getLp();
+            int    lpJ2     = motor.getJugador2().getLp();
+            pw.println(fecha + "|" + j1 + "|" + j2 + "|" + ganador + "|" + turnos + "|" + lpJ1 + "|" + lpJ2);
+        } catch (IOException e) {
+            System.err.println("[Persistencia] No se pudo escribir el resultado: " + e.getMessage());
+        }
+    }
+
+
+    public static String leerEstadisticas() {
+        File f = new File(ARCHIVO_RESULTADOS);
+        if (!f.exists()) return "No hay resultados registrados aún.";
+
+        Map<String, Integer> victorias = new TreeMap<>();
+        int totalPartidas = 0;
+        int maxTurnos = 0;
+        int minTurnos = Integer.MAX_VALUE;
+        String partidaMasLarga  = "";
+        String partidaMasCorta  = "";
+
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                linea = linea.strip();
+                if (linea.isEmpty()) continue;
+                String[] partes = linea.split("\\|");
+                if (partes.length < 7) continue;
+
+                totalPartidas++;
+                String ganador = partes[3];
+                int    turnos  = Integer.parseInt(partes[4]);
+
+                victorias.merge(ganador, 1, Integer::sum);
+
+                if (turnos > maxTurnos) {
+                    maxTurnos = turnos;
+                    partidaMasLarga = partes[0] + " — " + partes[1] + " vs " + partes[2] + " (" + turnos + " turnos)";
+                }
+                if (turnos < minTurnos) {
+                    minTurnos = turnos;
+                    partidaMasCorta = partes[0] + " — " + partes[1] + " vs " + partes[2] + " (" + turnos + " turnos)";
+                }
+            }
+        } catch (IOException e) {
+            return "Error al leer estadísticas: " + e.getMessage();
+        }

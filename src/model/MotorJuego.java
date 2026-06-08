@@ -175,13 +175,14 @@ public class MotorJuego implements SujetoJuego {
         log.add(mensaje);            
     }
 
- 
      
     public List<String> drenaEventosTurno() {
         List<String> eventos = new ArrayList<>();
         while (!colaEventos.isEmpty()) {
             eventos.add(colaEventos.poll());  
-
+        }
+        return eventos;
+    }
     public void iniciarTurno() {
         yaJugoUnaCarta = false;
         yaAtaco        = false;

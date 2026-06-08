@@ -1,0 +1,42 @@
+# ================================================================
+# cartas_dinamicas.txt  –  RF3: Carga de cartas por Reflection
+# ================================================================
+# Formato:
+#   MONSTRUO|nombre|atk|def|nivel
+#   MAGICA|nombre|ClaseEfecto
+#   TRAMPA|nombre|condicion|ClaseEfecto
+#
+# condicion: EN_ATAQUE | AL_INVOCAR | INMEDIATA | AL_RECIBIR_DANIO
+# ClaseEfecto: nombre de clase interna en patterns.Efectos
+# ================================================================
+
+# ---- Monstruos adicionales ----
+MONSTRUO|Slime Acuático|450|300|2
+MONSTRUO|Caballero de Hierro|1800|1600|5
+MONSTRUO|Dragón de Cristal|2400|2000|7
+MONSTRUO|Elemental del Fuego|1600|1200|4
+MONSTRUO|Guardián del Templo|1000|2000|4
+
+# ---- Cartas mágicas adicionales ----
+MAGICA|Rayo Cósmico|DanoDirecto800
+MAGICA|Viento Celestial|RobarDosCartas
+MAGICA|Poción Sagrada|Curar1000
+MAGICA|Tormenta Oscura|DestruirTodosCampoOponente
+MAGICA|Espada del Destino|AumentarAtkMasFuerte1000
+MAGICA|Niebla del Olvido|PasarMonstruoMasFuerteDefensa
+MAGICA|Pacto de Sangre|DescartarRecuperar2000
+MAGICA|Balanza Oscura|DanoPorDiferenciaLP
+MAGICA|Cometa Tóxico|DanoDirecto500RobarUna
+MAGICA|Demolición|DestruirMonstruoMenorAtk
+
+# ---- Trampas adicionales ----
+TRAMPA|Red de Sombras|EN_ATAQUE|ReducirAtacanteAtk1500
+TRAMPA|Barrera Mágica|EN_ATAQUE|ReflejarAtaqueComoLpDano
+TRAMPA|Jaula de Cristal|AL_INVOCAR|DestruirInvocadoConAtk1000
+TRAMPA|Portal Inverso|AL_INVOCAR|RegresarInvocadoAMano
+TRAMPA|Manto Sagrado|AL_RECIBIR_DANIO|EscudoReducirDanioAMitad
+TRAMPA|Eco Mortal|AL_RECIBIR_DANIO|EspejoReflectarDanio
+TRAMPA|Gran Sacrificio|INMEDIATA|PagarMitadLpLimpiarCampo
+TRAMPA|Cataclismo|INMEDIATA|DestruirTodosLosMonstruos
+TRAMPA|Apuesta Extrema|INMEDIATA|Perder1000LpRobarDos
+TRAMPA|Destino Oscuro|EN_ATAQUE|DestruirMonstruosAtaqueOponente

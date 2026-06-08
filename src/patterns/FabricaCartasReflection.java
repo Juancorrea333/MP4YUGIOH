@@ -7,67 +7,17 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * RF3 – Factory Method + Reflection API de Java.
- *
- * Lee un archivo de texto (.txt) y crea objetos Carta en tiempo de ejecución
- * sin usar if/switch.  Agregar una nueva carta al juego sólo requiere añadir
- * una línea al archivo y (si el efecto es nuevo) crear una clase en Efectos.java;
- * no se toca ni recompila ninguna otra clase.
- *
- * ═══════════════════════════════════════════════════════════════════
- * FORMATO DEL ARCHIVO  cartas/cartas_dinamicas.txt
- * ═══════════════════════════════════════════════════════════════════
- *
- *  Líneas en blanco o que empiezan con '#' son comentarios/ignoradas.
- *
- *  MONSTRUO
- *  --------
- *  MONSTRUO|nombre|atk|def|nivel
- *  Ejemplo:
- *    MONSTRUO|Slime Acuático|450|300|2
- *
- *  MAGICA
- *  ------
- *  MAGICA|nombre|ClaseEfecto
- *  donde ClaseEfecto es el nombre simple de una clase interna de patterns.Efectos.
- *  Ejemplo:
- *    MAGICA|Rayo Cósmico|DanoDirecto800
- *
- *  TRAMPA
- *  ------
- *  TRAMPA|nombre|condicion|ClaseEfecto
- *  condicion ∈ {EN_ATAQUE, AL_INVOCAR, INMEDIATA, AL_RECIBIR_DANIO}
- *  Ejemplo:
- *    TRAMPA|Red de Sombras|EN_ATAQUE|ReducirAtacanteAtk1500
- *
- * ═══════════════════════════════════════════════════════════════════
- *
- * Uso de Reflection (java.lang.reflect):
- *   1. Class.forName("patterns.Efectos$" + claseEfecto)
- *      → localiza la clase en tiempo de ejecución.
- *   2. getDeclaredConstructor()
- *      → obtiene el constructor por defecto.
- *   3. constructor.newInstance()
- *      → crea la instancia sin new.
- *
- * Las cartas creadas se registran en el Singleton RegistroCartas para
- * que cualquier componente las encuentre.
- */
+
 public class FabricaCartasReflection {
 
-    /** Ruta por defecto del archivo de cartas dinámicas. */
+
     private static final String ARCHIVO_DEFECTO = "cartas/cartas_dinamicas.txt";
 
-    /** Prefijo del paquete de efectos para Reflection. */
+
     private static final String PAQUETE_EFECTOS = "patterns.Efectos$";
 
-    // ── Singleton de GestorPersistencia se accede desde persistencia.GestorPersistencia
-    //    pero aquí no lo usamos directamente (separación de responsabilidades).
 
-    // =========================================================================
-    // API pública
-    // =========================================================================
+
 
     /**
      * Lee el archivo por defecto y carga todas las cartas en RegistroCartas.
@@ -103,13 +53,13 @@ public class FabricaCartasReflection {
                 numeroLinea++;
                 linea = linea.strip();
 
-                // Ignorar líneas vacías y comentarios
+
                 if (linea.isEmpty() || linea.startsWith("#")) continue;
 
                 try {
                     Carta carta = parsearLinea(linea);
                     if (carta != null) {
-                        registro.registrar(carta);   // Singleton
+                        registro.registrar(carta); 
                         cargadas.add(carta);
                         System.out.println("[Reflection] Carta cargada: " + carta.getNombre()
                                 + " (" + carta.getClass().getSimpleName() + ")");
@@ -125,16 +75,13 @@ public class FabricaCartasReflection {
         return cargadas;
     }
 
-    /**
-     * Crea el archivo de ejemplo si no existe, para que el proyecto funcione
-     * inmediatamente sin necesidad de crearlo a mano.
-     */
+
     public static void crearArchivoEjemplo() {
         File dir = new File("cartas");
         if (!dir.exists()) dir.mkdirs();
 
         File archivo = new File(ARCHIVO_DEFECTO);
-        if (archivo.exists()) return; // ya existe, no sobreescribir
+        if (archivo.exists()) return; 
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(archivo))) {
             pw.println("# ================================================================");
@@ -184,9 +131,7 @@ public class FabricaCartasReflection {
         }
     }
 
-    // =========================================================================
-    // Lógica interna de parseo + Reflection
-    // =========================================================================
+
 
     /**
      * Parsea una línea del archivo y crea la Carta correspondiente.
@@ -210,7 +155,7 @@ public class FabricaCartasReflection {
         };
     }
 
-    /** Crea un Monstruo: MONSTRUO|nombre|atk|def|nivel */
+
     private static Monstruo parsearMonstruo(String[] p) {
         if (p.length < 5) throw new IllegalArgumentException("MONSTRUO requiere 5 campos.");
         String nombre = p[1].strip();
@@ -220,37 +165,25 @@ public class FabricaCartasReflection {
         return new Monstruo(nombre, atk, def, nivel);
     }
 
-    /**
-     * Crea una Mágica usando Reflection: MAGICA|nombre|ClaseEfecto
-     *
-     * Reflection steps:
-     *   1. Class.forName(PAQUETE_EFECTOS + claseEfecto)  – localiza la clase
-     *   2. getDeclaredConstructor()                       – obtiene constructor vacío
-     *   3. newInstance()                                  – crea el objeto
-     */
+
     private static Magica parsearMagica(String[] p)
             throws ReflectiveOperationException {
         if (p.length < 3) throw new IllegalArgumentException("MAGICA requiere 3 campos.");
         String nombre      = p[1].strip();
         String claseEfecto = p[2].strip();
 
-        // ── REFLECTION ──────────────────────────────────────────────────────
-        Class<?> clazz = Class.forName(PAQUETE_EFECTOS + claseEfecto);  // 1
-        Constructor<?> ctor = clazz.getDeclaredConstructor();            // 2
-        ctor.setAccessible(true);
-        EstrategiaEfecto efecto = (EstrategiaEfecto) ctor.newInstance(); // 3
-        // ────────────────────────────────────────────────────────────────────
 
-        // Adaptamos EstrategiaEfecto → AccionMagica (son interfaces equivalentes)
+        Class<?> clazz = Class.forName(PAQUETE_EFECTOS + claseEfecto);  
+        Constructor<?> ctor = clazz.getDeclaredConstructor();            
+        ctor.setAccessible(true);
+        EstrategiaEfecto efecto = (EstrategiaEfecto) ctor.newInstance(); 
+
+
         return new Magica(nombre, efecto.getDescripcion(),
                 (usuario, oponente) -> efecto.activar(usuario, oponente));
     }
 
-    /**
-     * Crea una Trampa usando Reflection: TRAMPA|nombre|condicion|ClaseEfecto
-     *
-     * Mismo proceso de Reflection que parsearMagica.
-     */
+
     private static Trampa parsearTrampa(String[] p)
             throws ReflectiveOperationException {
         if (p.length < 4) throw new IllegalArgumentException("TRAMPA requiere 4 campos.");
@@ -258,12 +191,12 @@ public class FabricaCartasReflection {
         CondicionTrampa condicion  = CondicionTrampa.valueOf(p[2].strip().toUpperCase());
         String          claseEfecto = p[3].strip();
 
-        // ── REFLECTION ──────────────────────────────────────────────────────
-        Class<?> clazz = Class.forName(PAQUETE_EFECTOS + claseEfecto);  // 1
-        Constructor<?> ctor = clazz.getDeclaredConstructor();            // 2
+
+        Class<?> clazz = Class.forName(PAQUETE_EFECTOS + claseEfecto);  
+        Constructor<?> ctor = clazz.getDeclaredConstructor();            
         ctor.setAccessible(true);
-        EstrategiaEfecto efecto = (EstrategiaEfecto) ctor.newInstance(); // 3
-        // ────────────────────────────────────────────────────────────────────
+        EstrategiaEfecto efecto = (EstrategiaEfecto) ctor.newInstance(); 
+
 
         return new Trampa(nombre, efecto.getDescripcion(), condicion,
                 (usuario, oponente) -> efecto.activar(usuario, oponente));

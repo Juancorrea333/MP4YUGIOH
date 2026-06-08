@@ -102,3 +102,115 @@ public class Controlador {
         ventana.setVisible(true);
         ventanaInicio.dispose();
     }
+        private void inicializarJuego(Jugador j1, Jugador j2) {
+        FabricaCartasReflection.crearArchivoEjemplo(); 
+        try {
+            java.util.List<Carta> cartasDinamicas = FabricaCartasReflection.cargarDesdeArchivo();
+            System.out.println("[RF3] " + cartasDinamicas.size() + " cartas cargadas por Reflection.");
+        } catch (java.io.IOException e) {
+            System.out.println("[RF3] Aviso: no se pudo cargar cartas dinámicas: " + e.getMessage());
+        }
+
+        List<Carta> mazoCompleto = FabricaCartas.crearMazoCompleto();
+        Collections.shuffle(mazoCompleto);
+
+        for (int i = 0;  i < 25; i++) j1.agregarAlMazo(mazoCompleto.get(i));
+        for (int i = 25; i < 50; i++) j2.agregarAlMazo(mazoCompleto.get(i));
+
+        for (int i = 0; i < 5; i++) { j1.robarCarta(); j2.robarCarta(); }
+
+        motor = new MotorJuego(j1, j2);
+        if (vistaDuelo instanceof ObservadorJuego obs) motor.agregarObservador(obs);
+        motor.iniciarTurno();
+
+        gestorComandos.reiniciar();
+        gestorMemento.limpiar();
+    }
+
+    public void accionJugarCarta() {
+        int indiceCarta = vistaDuelo.getIndiceCartaSeleccionada();
+        if (indiceCarta < 0) { vistaDuelo.mostrarAviso("Selecciona una carta de tu mano."); return; }
+        if (motor.yaJugoUnaCarta()) { vistaDuelo.mostrarAviso("Ya jugaste una carta este turno."); return; }
+
+        Carta carta = motor.getActivo().getMano().get(indiceCarta);
+
+        gestorMemento.guardar(motor.crearMemento());
+
+        if (carta.esMonstruo()) {
+            accionJugarMonstruoCmd(indiceCarta, carta.comoMonstruo());
+        } else {
+            Comando cmd = new Comandos.ComandoJugarCarta(motor, indiceCarta, Posicion.ATAQUE, -1, -1);
+            String error = gestorComandos.ejecutar(cmd);
+            if (error != null) { vistaDuelo.mostrarError(error); gestorMemento.restaurar(); }
+        }
+
+        vistaDuelo.actualizarVista(motor);
+        verificarFin();
+    }
+
+    private void accionJugarMonstruoCmd(int indiceCarta, Monstruo monstruo) {
+        int indiceSacrificio  = -1;
+        int indiceSacrificio2 = -1;
+        if (monstruo.getNivel() > 4) {
+            int requeridos = monstruo.getNivel() >= 7 ? 2 : 1;
+            if (motor.getActivo().getCampo().size() < requeridos) {
+                vistaDuelo.mostrarAviso("Necesitas " + requeridos + " sacrificio(s)."); return;
+            }
+            indiceSacrificio = vistaDuelo.solicitarSacrificio();
+            if (requeridos == 2) indiceSacrificio2 = vistaDuelo.solicitarSegundoSacrificio();
+        }
+        int pos = vistaDuelo.solicitarPosicionInvocacion();
+        if (pos < 0) return;
+        Posicion posicion = pos == 0 ? Posicion.ATAQUE : Posicion.DEFENSA;
+        Comando cmd = new Comandos.ComandoJugarCarta(motor, indiceCarta, posicion, indiceSacrificio, indiceSacrificio2);
+        String error = gestorComandos.ejecutar(cmd);
+        if (error != null) vistaDuelo.mostrarError(error);
+    }
+
+    private void accionJugarMonstruo(int indiceCarta, Monstruo monstruo) {
+        int indiceSacrificio  = -1;
+        int indiceSacrificio2 = -1;
+
+        if (monstruo.getNivel() > 4) {
+            int requeridos = monstruo.getNivel() >= 7 ? 2 : 1;
+            if (motor.getActivo().getCampo().size() < requeridos) {
+                vistaDuelo.mostrarAviso("Necesitas " + requeridos + " sacrificio(s).");
+                return;
+            }
+            indiceSacrificio = vistaDuelo.solicitarSacrificio();
+            if (requeridos == 2) indiceSacrificio2 = vistaDuelo.solicitarSegundoSacrificio();
+        }
+
+        int pos = vistaDuelo.solicitarPosicionInvocacion();
+        if (pos < 0) return;
+
+        Posicion posicion = pos == 0 ? Posicion.ATAQUE : Posicion.DEFENSA;
+        String   error    = motor.jugarCarta(indiceCarta, posicion, indiceSacrificio, indiceSacrificio2);
+        if (error != null) vistaDuelo.mostrarError(error);
+    }
+
+    public void accionAtacar() {
+        if (motor.esPrimerTurno()) { vistaDuelo.mostrarAviso("No se puede atacar en el primer turno."); return; }
+        if (motor.yaAtaco())       { vistaDuelo.mostrarAviso("Ya atacaste este turno."); return; }
+
+        int indiceAtacante = vistaDuelo.solicitarIndiceAtacante();
+        int indiceDefensor = motor.getOponente().getCampo().isEmpty() ? -1 : vistaDuelo.solicitarIndiceDefensor();
+
+        gestorMemento.guardar(motor.crearMemento());
+        Comando cmd = new Comandos.ComandoAtacar(motor, indiceAtacante, indiceDefensor);
+        String error = gestorComandos.ejecutar(cmd);
+        if (error != null) { vistaDuelo.mostrarError(error); gestorMemento.restaurar(); }
+
+        vistaDuelo.actualizarVista(motor);
+        verificarFin();
+    }
+
+    public void accionPasarTurno() {
+        gestorMemento.guardar(motor.crearMemento());
+        Comando cmd = new Comandos.ComandoPasarTurno(motor);
+        gestorComandos.ejecutar(cmd);
+        vistaDuelo.actualizarVista(motor);
+        if (!motor.isJuegoTerminado()) {
+            vistaDuelo.mostrarCambioDeTurno(motor.getNumeroTurno(), motor.getActivo().getNombre());
+        }
+    }

@@ -95,9 +95,7 @@ public class MotorJuego implements SujetoJuego {
         }
     }
 
-    
 
-    
     public MementoJuego crearMemento() {
         return new MementoJuego(
             numeroTurno,

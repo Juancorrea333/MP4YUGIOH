@@ -10,10 +10,10 @@ import java.util.*;
 
 public class GestorPersistencia {
 
-    
+
     private static volatile GestorPersistencia instancia;
 
-    private GestorPersistencia() {} 
+    private GestorPersistencia() {}   
 
     public static GestorPersistencia getInstance() {
         if (instancia == null) {
@@ -23,12 +23,20 @@ public class GestorPersistencia {
         }
         return instancia;
     }
-    
+
+
     private static final String CARPETA_PARTIDAS  = "partidas";
     private static final String ARCHIVO_RESULTADOS = "resultados.txt";
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    
+
+
+    /**
+     * Guarda el estado completo del motor en  partidas/<nombreArchivo>.ygo
+     * @param motor  estado actual del juego
+     * @param nombreArchivo  nombre base del archivo (sin extensión)
+     * @throws IOException  si hay error de escritura
+     */
     public static void guardarPartida(MotorJuego motor, String nombreArchivo) throws IOException {
         File carpeta = new File(CARPETA_PARTIDAS);
         if (!carpeta.exists()) carpeta.mkdirs();
@@ -36,7 +44,7 @@ public class GestorPersistencia {
         File archivo = new File(carpeta, nombreArchivo + ".ygo");
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(archivo)))) {
 
-            
+
             pw.println("[TURNO]");
             pw.println("numero=" + motor.getNumeroTurno());
             pw.println("activo=" + motor.getActivo().getNombre());
@@ -45,11 +53,11 @@ public class GestorPersistencia {
             pw.println("yaAtaco=" + motor.yaAtaco());
             pw.println();
 
-            
+
             escribirJugador(pw, motor.getJugador1(), "J1");
             pw.println();
 
-            
+
             escribirJugador(pw, motor.getJugador2(), "J2");
         }
     }
@@ -59,24 +67,24 @@ public class GestorPersistencia {
         pw.println("nombre=" + j.getNombre());
         pw.println("lp=" + j.getLp());
 
-        
+
         pw.print("mazo=");
         Stack<Carta> mazo = j.getMazo();
-        
+
         List<String> mazoNombres = new ArrayList<>();
-        
+
         Deque<String> temp = new ArrayDeque<>();
         for (Carta c : mazo) temp.push(c.getNombre());     
         for (String n : temp) mazoNombres.add(n);
         pw.println(String.join(",", mazoNombres));
 
-        
+
         pw.print("mano=");
         List<String> manoNombres = new ArrayList<>();
         for (Carta c : j.getMano()) manoNombres.add(c.getNombre());
         pw.println(String.join(",", manoNombres));
 
-        
+
         pw.print("campo=");
         List<String> campoStr = new ArrayList<>();
         for (Monstruo m : j.getCampo()) {
@@ -85,20 +93,18 @@ public class GestorPersistencia {
         }
         pw.println(String.join("|", campoStr));
 
-        
+
         pw.print("trampas=");
         List<String> trampaNames = new ArrayList<>();
         for (Trampa t : j.getTrampas()) trampaNames.add(t.getNombre());
         pw.println(String.join(",", trampaNames));
 
-        // Monstruos invocados (Set)
+
         pw.print("invocados=");
         pw.println(String.join(",", j.getMonstruosInvocados()));
     }
 
-    // =========================================================================
-    // CARGAR PARTIDA
-    // =========================================================================
+
 
     /**
      * Carga una partida desde  partidas/<nombreArchivo>.ygo
@@ -135,32 +141,22 @@ public class GestorPersistencia {
         int    lp     = Integer.parseInt(sec.getOrDefault("lp", "8000"));
 
         Jugador j = new Jugador(nombre);
-        
+
         if (lp < 8000) j.recibirDanio(8000 - lp);
         else if (lp > 8000) j.recuperarLp(lp - 8000);
 
-        
-        String mazoStr = sec.getOrDefault("mazo", "");
-        if (!mazoStr.isBlank()) {
-            String[] mazoNombres = mazoStr.split(",");
-            
-        // Ajustamos LP directamente (no hay setter, usamos recibirDanio desde 8000)
-        if (lp < 8000) j.recibirDanio(8000 - lp);
-        else if (lp > 8000) j.recuperarLp(lp - 8000);
 
-        // Mazo (reconstructed as Stack – push in reverse so tope queda correcto)
         String mazoStr = sec.getOrDefault("mazo", "");
         if (!mazoStr.isBlank()) {
             String[] mazoNombres = mazoStr.split(",");
-            // El archivo guarda de tope a fondo; empujamos de fondo a tope
+
             for (int i = mazoNombres.length - 1; i >= 0; i--) {
                 Carta c = buscarCarta(mazoNombres[i].trim());
                 if (c != null) j.agregarAlMazo(c);
             }
         }
 
-        
-        // Mano (LinkedList)
+
         String manoStr = sec.getOrDefault("mano", "");
         if (!manoStr.isBlank()) {
             for (String nombre2 : manoStr.split(",")) {
@@ -169,8 +165,6 @@ public class GestorPersistencia {
             }
         }
 
-        
-        // Campo (nombre:atk:def:nivel:posicion:puedeAtacar)
         String campoStr = sec.getOrDefault("campo", "");
         if (!campoStr.isBlank()) {
             for (String entry : campoStr.split("\\|")) {
@@ -190,8 +184,6 @@ public class GestorPersistencia {
             }
         }
 
-    
-        // Trampas
         String trampaStr = sec.getOrDefault("trampas", "");
         if (!trampaStr.isBlank()) {
             for (String tn : trampaStr.split(",")) {
@@ -200,8 +192,7 @@ public class GestorPersistencia {
             }
         }
 
-        
-        // Monstruos invocados (Set)
+
         String invocadosStr = sec.getOrDefault("invocados", "");
         if (!invocadosStr.isBlank()) {
             for (String inv : invocadosStr.split(",")) {
@@ -212,21 +203,13 @@ public class GestorPersistencia {
         return j;
     }
 
-    
+
     private static Carta buscarCarta(String nombre) {
 
         return FabricaCartas.porNombre(nombre);
     }
 
-  
-    /** Busca en la FabricaCartas por nombre. Devuelve copia nueva (no cached). */
-    private static Carta buscarCarta(String nombre) {
-        // FabricaCartas.crearMazoCompleto() construye instancias nuevas cada vez
-        // Buscamos en el catálogo estático por nombre
-        return FabricaCartas.porNombre(nombre);
-    }
 
-    // Parser de secciones [TAG] -> {clave -> valor}
     private static Map<String, Map<String, String>> parsearArchivo(File archivo) throws IOException {
         Map<String, Map<String, String>> resultado = new LinkedHashMap<>();
         String seccionActual = null;
@@ -249,10 +232,7 @@ public class GestorPersistencia {
         return resultado;
     }
 
- 
-    // =========================================================================
-    // LISTADO DE PARTIDAS GUARDADAS
-    // =========================================================================
+
 
     public static List<String> listarPartidas() {
         File carpeta = new File(CARPETA_PARTIDAS);
@@ -266,16 +246,7 @@ public class GestorPersistencia {
         return nombres;
     }
 
-   
 
-    // =========================================================================
-    // HISTORIAL DE RESULTADOS
-    // =========================================================================
-
-    /**
-     * Escribe una línea al final de resultados.txt con los datos del duelo.
-     * Formato: FECHA|J1|J2|GANADOR|TURNOS|LP_J1|LP_J2
-     */
     public static void registrarResultado(MotorJuego motor) {
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(ARCHIVO_RESULTADOS, true)))) {
             String fecha    = LocalDateTime.now().format(FMT);
@@ -292,17 +263,6 @@ public class GestorPersistencia {
     }
 
 
-    // =========================================================================
-    // ESTADÍSTICAS
-    // =========================================================================
-
-    /**
-     * Lee resultados.txt y devuelve un String formateado con estadísticas:
-     *  - Total de partidas
-     *  - Victorias por jugador
-     *  - Partida más larga (más turnos)
-     *  - Partida más corta
-     */
     public static String leerEstadisticas() {
         File f = new File(ARCHIVO_RESULTADOS);
         if (!f.exists()) return "No hay resultados registrados aún.";

@@ -8,24 +8,12 @@ import model.Carta;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * RF3 – Patrón Strategy: implementaciones concretas de EstrategiaEfecto.
- *
- * Cada clase interna estática es un algoritmo de efecto intercambiable.
- * Se instancian por nombre mediante Reflection (ver FabricaCartasReflection).
- *
- * Regla de nomenclatura: el nombre de clase ES el getNombreEfecto().
- * La fábrica hace:  Class.forName("patterns.Efectos$" + nombreEfecto)
- */
+
 public class Efectos {
 
-    private Efectos() {} // utilidad estática, no instanciar
+    private Efectos() {} 
 
-    // =========================================================================
-    // Efectos de cartas MÁGICAS
-    // =========================================================================
 
-    /** Roba 2 cartas del mazo propio. */
     public static class RobarDosCartas implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             usuario.robarCarta();
@@ -36,7 +24,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Robas 2 cartas de tu mazo."; }
     }
 
-    /** Recupera 1000 LP. */
+
     public static class Curar1000 implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             usuario.recuperarLp(1000);
@@ -46,7 +34,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Recuperas 1000 LP."; }
     }
 
-    /** Inflige 800 puntos de daño directo al oponente. */
+
     public static class DanoDirecto800 implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             oponente.recibirDanio(800);
@@ -56,7 +44,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "El oponente recibe 800 puntos de daño directo."; }
     }
 
-    /** Inflige 500 puntos de daño directo al oponente y roba 1 carta. */
+
     public static class DanoDirecto500RobarUna implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             usuario.robarCarta();
@@ -68,7 +56,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Robas 1 carta y el oponente recibe 500 de daño."; }
     }
 
-    /** Destruye todos los monstruos del campo oponente. */
+
     public static class DestruirTodosCampoOponente implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (!oponente.tieneMonstruos()) {
@@ -82,7 +70,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Destruye todos los monstruos del oponente."; }
     }
 
-    /** Destruye el monstruo con menor ATK del oponente. */
+
     public static class DestruirMonstruoMenorAtk implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (!oponente.tieneMonstruos()) {
@@ -100,7 +88,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Destruye el monstruo con menos ATK del oponente."; }
     }
 
-    /** El monstruo propio con más ATK gana 1000 ATK. */
+
     public static class AumentarAtkMasFuerte1000 implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (!usuario.tieneMonstruos()) {
@@ -118,7 +106,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "El monstruo con más ATK propio gana 1000 ATK."; }
     }
 
-    /** El monstruo rival con más ATK pasa a posición DEFENSA. */
+
     public static class PasarMonstruoMasFuerteDefensa implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (!oponente.tieneMonstruos()) {
@@ -137,7 +125,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "El monstruo rival con más ATK pasa a DEFENSA."; }
     }
 
-    /** Descarta la primera carta de la mano y recupera 2000 LP. */
+
     public static class DescartarRecuperar2000 implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (usuario.getMano().isEmpty()) {
@@ -152,7 +140,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Descartas la primera carta y recuperas 2000 LP."; }
     }
 
-    /** Si tienes menos LP que el oponente, le infliges la diferencia. */
+
     public static class DanoPorDiferenciaLP implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (usuario.getLp() < oponente.getLp()) {
@@ -168,11 +156,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Si tienes menos LP, el oponente recibe la diferencia."; }
     }
 
-    // =========================================================================
-    // Efectos de cartas TRAMPA
-    // =========================================================================
 
-    /** Refleja el ATK del último monstruo atacante como daño al oponente. */
     public static class ReflejarAtaqueComoLpDano implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (!oponente.tieneMonstruos()) return;
@@ -185,7 +169,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Refleja el ATK del atacante como daño."; }
     }
 
-    /** Destruye todos los monstruos en posición de ATAQUE del oponente. */
+
     public static class DestruirMonstruosAtaqueOponente implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             List<Monstruo> aDestruir = new ArrayList<>();
@@ -199,7 +183,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Destruye todos los monstruos atacantes del oponente."; }
     }
 
-    /** El último monstruo atacante pierde 1500 ATK. */
+
     public static class ReducirAtacanteAtk1500 implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (!oponente.tieneMonstruos()) return;
@@ -212,7 +196,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "El monstruo que ataca pierde 1500 ATK."; }
     }
 
-    /** Si el monstruo recién invocado tiene ATK ≥ 1000, lo destruye. */
+
     public static class DestruirInvocadoConAtk1000 implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (!oponente.tieneMonstruos()) return;
@@ -228,7 +212,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Destruye el monstruo invocado si ATK ≥ 1000."; }
     }
 
-    /** Regresa el monstruo recién invocado a la mano del oponente. */
+
     public static class RegresarInvocadoAMano implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             if (!oponente.tieneMonstruos()) return;
@@ -241,7 +225,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "El monstruo invocado regresa a la mano."; }
     }
 
-    /** Reduce el daño de combate entrante a la mitad (sólo notificación; la reducción real está en MotorJuego). */
+
     public static class EscudoReducirDanioAMitad implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             System.out.println(usuario.getNombre() + " activa Escudo Divino: el daño se reduce a la mitad.");
@@ -250,7 +234,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "El daño de combate entrante se reduce a la mitad."; }
     }
 
-    /** Refleja el daño recibido también al oponente (notificación). */
+
     public static class EspejoReflectarDanio implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             System.out.println(usuario.getNombre() + " activa Espejo del Alma: el oponente también recibirá el daño.");
@@ -259,7 +243,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "El oponente recibe la misma cantidad de daño."; }
     }
 
-    /** Paga la mitad de los LP propios para limpiar el campo del oponente. */
+
     public static class PagarMitadLpLimpiarCampo implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             int costo = usuario.getLp() / 2;
@@ -272,7 +256,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Pagas la mitad de LP para limpiar el campo rival."; }
     }
 
-    /** Destruye todos los monstruos de ambos campos. */
+
     public static class DestruirTodosLosMonstruos implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             usuario.limpiarCampo();
@@ -283,7 +267,7 @@ public class Efectos {
         @Override public String getDescripcion()  { return "Destruye todos los monstruos en ambos campos."; }
     }
 
-    /** Pierde 1000 LP y roba 2 cartas. */
+
     public static class Perder1000LpRobarDos implements EstrategiaEfecto {
         @Override public void activar(Jugador usuario, Jugador oponente) {
             usuario.recibirDanio(1000);

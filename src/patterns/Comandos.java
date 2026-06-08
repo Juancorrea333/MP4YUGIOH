@@ -5,30 +5,11 @@ import model.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * RF3 – Patrón Command: comandos concretos del juego.
- *
- * Cada acción del jugador es un objeto Command que encapsula:
- *  - Los parámetros necesarios para ejecutar la acción.
- *  - La lógica de undo (reversión del estado antes de ejecutar).
- *
- * GestorComandos (Invoker) ejecuta y deshace estos comandos.
- * MotorJuego (Receiver) realiza el trabajo real.
- */
+
 public class Comandos {
 
     private Comandos() {}
 
-    // =========================================================================
-    // Comando: Jugar Carta
-    // =========================================================================
-
-    /**
-     * Encapsula la acción de jugar una carta de la mano.
-     * Undo: devuelve la carta a la mano y revierte el flag yaJugoCarta.
-     * Nota: revertir efectos de magia/trampa puede ser complejo; aquí
-     *       restituimos la estructura de campo/mano, no los LP (simplificación).
-     */
     public static class ComandoJugarCarta implements Comando {
 
         private final MotorJuego motor;
@@ -37,7 +18,7 @@ public class Comandos {
         private final int        indiceSacrificio;
         private final int        indiceSacrificio2;
 
-        // Estado previo para undo
+
         private Carta            cartaJugada;
         private List<Monstruo>   campoAntesJ1;
         private List<Monstruo>   campoAntesJ2;
@@ -54,7 +35,7 @@ public class Comandos {
 
         @Override
         public String execute() {
-            // Capturamos estado previo para undo
+            
             cartaJugada  = motor.getActivo().getMano().get(indiceCarta);
             campoAntesJ1 = new ArrayList<>(motor.getJugador1().getCampo());
             campoAntesJ2 = new ArrayList<>(motor.getJugador2().getCampo());
@@ -64,14 +45,13 @@ public class Comandos {
 
         @Override
         public void undo() {
-            // Restauramos la carta a la mano del activo
+            
             Jugador activo = motor.getActivo();
             if (cartaJugada != null && !activo.getMano().contains(cartaJugada)) {
                 activo.getMano().add(indiceCarta > activo.getMano().size()
                         ? activo.getMano().size() : indiceCarta, cartaJugada);
             }
-            // Nota: este undo básico restaura la mano; para efectos complejos
-            // se recomienda usar GestorMemento.restaurar() en su lugar.
+
             System.out.println("[UNDO] Carta " + (cartaJugada != null ? cartaJugada.getNombre() : "?")
                     + " devuelta a la mano.");
         }
@@ -83,22 +63,15 @@ public class Comandos {
         }
     }
 
-    // =========================================================================
-    // Comando: Atacar
-    // =========================================================================
 
-    /**
-     * Encapsula la acción de atacar con un monstruo.
-     * Undo: los cambios de LP y destrucciones son difíciles de revertir
-     *       sin un Memento; este comando documenta la limitación.
-     */
+
     public static class ComandoAtacar implements Comando {
 
         private final MotorJuego motor;
         private final int        indiceAtacante;
         private final int        indiceDefensor;
 
-        // Snapshot de LP antes del ataque
+
         private int lpActivoAntes;
         private int lpOponenteAntes;
 
@@ -117,7 +90,7 @@ public class Comandos {
 
         @Override
         public void undo() {
-            // Reversión parcial de LP (sin restaurar monstruos destruidos)
+
             int danioActivo   = lpActivoAntes   - motor.getActivo().getLp();
             int danioOponente = lpOponenteAntes  - motor.getOponente().getLp();
             if (danioActivo   > 0) motor.getActivo().recuperarLp(danioActivo);
@@ -131,15 +104,8 @@ public class Comandos {
         }
     }
 
-    // =========================================================================
-    // Comando: Pasar Turno
-    // =========================================================================
 
-    /**
-     * Encapsula pasar el turno.
-     * Undo: revertir un turno completo es muy complejo; aquí sólo documentamos.
-     * Para un undo real de turno, usar GestorMemento con snapshot previo al turno.
-     */
+
     public static class ComandoPasarTurno implements Comando {
 
         private final MotorJuego motor;
@@ -159,9 +125,7 @@ public class Comandos {
 
         @Override
         public void undo() {
-            // Pasar turno no se deshace fácilmente en tiempo de ejecución;
-            // el jugador debe usar GestorMemento para restaurar el snapshot
-            // guardado antes de pasar el turno.
+
             System.out.println("[UNDO] No se puede deshacer 'Pasar Turno' sin un Memento previo.");
         }
 
@@ -171,9 +135,7 @@ public class Comandos {
         }
     }
 
-    // =========================================================================
-    // Comando: Activar Trampa
-    // =========================================================================
+
 
     public static class ComandoActivarTrampa implements Comando {
 
@@ -193,7 +155,7 @@ public class Comandos {
 
         @Override
         public void undo() {
-            // Re-colocar la trampa en la zona de trampas del oponente
+
             motor.getOponente().colocarTrampa(trampa);
             System.out.println("[UNDO] Trampa " + trampa.getNombre() + " devuelta al campo.");
         }

@@ -214,3 +214,119 @@ public class Controlador {
             vistaDuelo.mostrarCambioDeTurno(motor.getNumeroTurno(), motor.getActivo().getNombre());
         }
     }
+       public void accionDeshacer() {
+        if (!gestorMemento.haySnapshot()) {
+            vistaDuelo.mostrarAviso("No hay acciones para deshacer.");
+            return;
+        }
+        MementoJuego memento = gestorMemento.restaurar();
+        motor.restaurarMemento(memento);
+        vistaDuelo.actualizarVista(motor);
+        vistaDuelo.mostrarAviso("Acción deshecha. Turno " + motor.getNumeroTurno()
+                + " – " + motor.getActivo().getNombre());
+    }
+
+    public java.util.List<String> getHistorialComandos() {
+        return gestorComandos.getHistorial();
+    }
+
+    public void ejecutarTurnoConsola() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("\n--- Acciones disponibles ---");
+        System.out.println("1. Jugar carta");
+        System.out.println("2. Atacar");
+        System.out.println("3. Pasar turno");
+        System.out.println("4. Guardar partida");
+        System.out.print("Acción: ");
+        String op = sc.nextLine().trim();
+
+        switch (op) {
+            case "1" -> accionJugarCarta();
+            case "2" -> accionAtacar();
+            case "3" -> accionPasarTurno();
+            case "4" -> {
+                System.out.print("Nombre para guardar: ");
+                String nombre = sc.nextLine().trim();
+                try {
+                    GestorPersistencia.guardarPartida(motor, nombre.isEmpty() ? "partida_auto" : nombre);
+                    System.out.println("✔ Partida guardada.");
+                } catch (IOException e) {
+                    System.out.println("Error al guardar: " + e.getMessage());
+                }
+            }
+            default -> System.out.println("Opción no reconocida.");
+        }
+    }
+
+    public void accionGuardarPartida(JFrame parent) {
+        String nombre = JOptionPane.showInputDialog(parent,
+                "Nombre para la partida guardada:", "Guardar Partida", JOptionPane.PLAIN_MESSAGE);
+        if (nombre == null || nombre.isBlank()) return;
+        try {
+            GestorPersistencia.guardarPartida(motor, nombre.trim());
+            JOptionPane.showMessageDialog(parent,
+                    "Partida guardada como \"" + nombre.trim() + ".ygo\"",
+                    "Guardado", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(parent,
+                    "Error al guardar: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void accionCargarPartida(JFrame parent) {
+        List<String> partidas = GestorPersistencia.listarPartidas();
+        if (partidas.isEmpty()) {
+            JOptionPane.showMessageDialog(parent,
+                    "No hay partidas guardadas.", "Sin partidas", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String[] opciones = partidas.toArray(new String[0]);
+        String seleccion = (String) JOptionPane.showInputDialog(parent,
+                "Selecciona una partida:", "Cargar Partida",
+                JOptionPane.PLAIN_MESSAGE, null, opciones, opciones[0]);
+        if (seleccion == null) return;
+
+        try {
+            motor = GestorPersistencia.cargarPartida(seleccion);
+            VentanaDuelo ventana = new VentanaDuelo();
+            ventana.setControlador(this);
+            vistaDuelo = ventana;
+            vistaDuelo.actualizarVista(motor);
+            ventana.setVisible(true);
+            if (parent instanceof VentanaInicio vi) vi.dispose();
+            JOptionPane.showMessageDialog(ventana,
+                    "Partida \"" + seleccion + "\" cargada correctamente.",
+                    "Partida cargada", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(parent,
+                    "Error al cargar la partida: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void accionMostrarEstadisticas(JFrame parent) {
+        String stats = GestorPersistencia.leerEstadisticas();
+        JTextArea ta = new JTextArea(stats);
+        ta.setEditable(false);
+        ta.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        JScrollPane scroll = new JScrollPane(ta);
+        scroll.setPreferredSize(new Dimension(430, 280));
+        JOptionPane.showMessageDialog(parent, scroll, "Estadísticas históricas", JOptionPane.PLAIN_MESSAGE);
+    }
+
+
+    private void verificarFin() {
+        if (motor.isJuegoTerminado()) {
+            vistaDuelo.finalizar();
+            GestorPersistencia.registrarResultado(motor);
+
+            if (vistaDuelo instanceof VentanaDuelo ventana) {
+                String ganador = motor.getGanador() != null ? motor.getGanador().getNombre() : "Nadie";
+                SwingUtilities.invokeLater(() -> {
+                    new VentanaFin(ganador).setVisible(true);
+                    ventana.dispose();
+                });
+            }
+        }
+    }
+}

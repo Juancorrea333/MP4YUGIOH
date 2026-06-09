@@ -1,0 +1,24 @@
+[TURNO]
+numero=8
+activo=Aaron
+primerJugador=Blaise
+yaJugoCarta=false
+yaAtaco=false
+
+[J1]
+nombre=Aaron
+lp=2100
+mazo=Equilibrio Roto,Slime del Pantano,Dragon Bebe,Olla de la Codicia,Coloso Eterno,Golem de Hierro
+mano=Goblin Ladron,Espejo del Alma,Agujero Trampa,Misil de Fuego
+campo=Rata del Laberinto:550:400:2:DEFENSA:false
+trampas=
+invocados=Jinzo Jr.,Guerrero Llameante,Rata del Laberinto
+
+[J2]
+nombre=Blaise
+lp=6800
+mazo=Arcangel Bahamut,Cilindro Magico,Trampa Dimensional,Exodia el Prohibido,Dragon Supremo,Dian Keto la Curadora,Caballero Celestial,Fenix Divino
+mano=Juicio Solemne,Fuerza de Espejo,Oferta de Sangre,Torbellino Oscuro
+campo=Mago Oscuro:2500:2100:7:ATAQUE:false
+trampas=
+invocados=Kuriboh Evolucionado,Dragon del Caos,Mago Oscuro

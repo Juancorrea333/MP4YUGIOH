@@ -1,0 +1,77 @@
+PARTIDA 1:
+[TURNO]
+numero=7
+activo=Aaron
+primerJugador=Aaron
+yaJugoCarta=false
+yaAtaco=false
+
+[J1]
+nombre=Aaron
+lp=5450
+mazo=Equilibrio Roto,Maga de la Luna,Espectro Oscuro,Slime del Pantano,Drag�n Beb�,Mago de la Oscuridad,Misil de Fuego,Olla de la Codicia,Coloso Eterno,Golem de Hierro,F�nix Ardiente,Se�or de los Dragones,Dios del Abismo,Bestia de las Sombras,Se�or del Tiempo,Escudo Divino
+mano=Drag�n Azul de Ojos Blancos,Fuerza de Espejo,Trampa del Agujero,Espejo del Alma,Agujero Trampa,Goblin Ladr�n,Espectro Errante
+campo=
+trampas=
+invocados=Rata del Laberinto,Jinzo Jr.
+
+[J2]
+nombre=Blaise
+lp=8000
+mazo=Tierra Arrasada,Arc�ngel Bahamut,Cilindro M�gico,Guerrero Humilde,Mago Oscuro,Torbellino Oscuro,Trampa Dimensional,Exodia el Prohibido,Axe of Despair,Drag�n Supremo,Guerrero Llameante,Dian Keto la Curadora,Caballero Celestial,F�nix Divino,Trueno del Cielo,Libro de la Luna,Arquero del Viento
+mano=Tributo Torrencial,Ataque Imprudente,Kuriboh Evolucionado,Juicio Solemne,Oferta de Sangre,Drag�n Blanco
+campo=Drag�n del Caos:2200:1800:6:ATAQUE:false
+trampas=
+invocados=Golem de Piedra,Drag�n del Caos
+
+PARTIDA 2:
+[TURNO]
+numero=12
+activo=Aaron
+primerJugador=Aaron
+yaJugoCarta=false
+yaAtaco=false
+
+[J1]
+nombre=Aaron
+lp=5100
+mazo=Equilibrio Roto,Slime del Pantano,Coloso Eterno,Golem de Hierro,Dios del Abismo
+mano=Drag�n Azul de Ojos Blancos,Tierra Arrasada,Escudo Divino,Olla de la Codicia
+campo=F�nix Ardiente:2100:1200:5:ATAQUE:true
+trampas=
+invocados=Mago de la Oscuridad,Guerrero Llameante,Jinzo Jr.,Bestia de las Sombras,F�nix Ardiente
+
+[J2]
+nombre=Blaise
+lp=1400
+mazo=Arc�ngel Bahamut,Trampa Dimensional,Drag�n Supremo,Caballero Celestial,F�nix Divino
+mano=Goblin Ladr�n,Fuerza de Espejo,Drag�n Blanco,Trueno del Cielo
+campo=Kuriboh Evolucionado:1400:1300:4:ATAQUE:false
+trampas=
+invocados=Rata del Laberinto,Arquero del Viento,Guerrero Humilde,Se�or del Tiempo,Kuriboh Evolucionado
+
+PARTIDA 3:
+[TURNO]
+numero=8
+activo=Aaron
+primerJugador=Blaise
+yaJugoCarta=false
+yaAtaco=false
+
+[J1]
+nombre=Aaron
+lp=2100
+mazo=Equilibrio Roto,Slime del Pantano,Drag�n Beb�,Olla de la Codicia,Coloso Eterno,Golem de Hierro
+mano=Goblin Ladr�n,Espejo del Alma,Agujero Trampa,Misil de Fuego
+campo=Rata del Laberinto:550:400:2:DEFENSA:false
+trampas=
+invocados=Jinzo Jr.,Guerrero Llameante,Rata del Laberinto
+
+[J2]
+nombre=Blaise
+lp=6800
+mazo=Arc�ngel Bahamut,Cilindro M�gico,Trampa Dimensional,Exodia el Prohibido,Drag�n Supremo,Dian Keto la Curadora,Caballero Celestial,F�nix Divino
+mano=Juicio Solemne,Fuerza de Espejo,Oferta de Sangre,Torbellino Oscuro
+campo=Mago Oscuro:2500:2100:7:ATAQUE:false
+trampas=
+invocados=Kuriboh Evolucionado,Drag�n del Caos,Mago Oscuro

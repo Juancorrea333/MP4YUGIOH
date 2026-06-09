@@ -1,0 +1,24 @@
+[TURNO]
+numero=12
+activo=Aaron
+primerJugador=Aaron
+yaJugoCarta=false
+yaAtaco=false
+
+[J1]
+nombre=Aaron
+lp=5100
+mazo=Equilibrio Roto,Slime del Pantano,Coloso Eterno,Golem de Hierro,Dios del Abismo
+mano=Dragon Azul de Ojos Blancos,Tierra Arrasada,Escudo Divino,Olla de la Codicia
+campo=Fenix Ardiente:2100:1200:5:ATAQUE:true
+trampas=
+invocados=Mago de la Oscuridad,Guerrero Llameante,Jinzo Jr.,Bestia de las Sombras,Fenix Ardiente
+
+[J2]
+nombre=Blaise
+lp=1400
+mazo=Arcangel Bahamut,Trampa Dimensional,Dragon Supremo,Caballero Celestial,Fenix Divino
+mano=Goblin Ladron,Fuerza de Espejo,Dragon Blanco,Trueno del Cielo
+campo=Kuriboh Evolucionado:1400:1300:4:ATAQUE:false
+trampas=
+invocados=Rata del Laberinto,Arquero del Viento,Guerrero Humilde,Senor del Tiempo,Kuriboh Evolucionado
